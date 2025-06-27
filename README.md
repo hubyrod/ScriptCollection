@@ -21,12 +21,12 @@ curl -sSL https://raw.githubusercontent.com/hubyrod/ScriptCollection/main/skipla
 
 - **Development Tools**
   - TypeScript configuration with modern settings (ES2022, strict mode)
-  - ESLint with TypeScript support
+  - ESLint with TypeScript support (both legacy and flat config)
   - Prettier code formatting
-  - Nodemon for development hot-reloading
+  - Nodemon with tsx for development hot-reloading
 
 - **Dependencies**
-  - Express.js for web server functionality
+  - Fastify for web server functionality
   - Skip Labs integration (@skiplabs/skip)
   - All necessary TypeScript and development types
 
@@ -38,6 +38,6 @@ curl -sSL https://raw.githubusercontent.com/hubyrod/ScriptCollection/main/skipla
   - `pnpm format` - Format code with Prettier
   - `pnpm clean` - Clean build files and dependencies
 
-The script creates a complete, ready-to-use TypeScript project with a basic Express.js server and automatically makes an initial Git commit.
+The script creates a complete, ready-to-use TypeScript project with a basic Fastify server and automatically makes an initial Git commit.
 
 

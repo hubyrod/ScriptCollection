@@ -63,10 +63,18 @@ pnpm init > /dev/null 2>&1
 print_success "Project initialized"
 
 print_step "Installing development dependencies"
-pnpm add -D typescript @types/node > /dev/null 2>&1
-pnpm add -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin > /dev/null 2>&1
-pnpm add -D prettier eslint-config-prettier eslint-plugin-prettier > /dev/null 2>&1
-pnpm add -D ts-node nodemon > /dev/null 2>&1
+pnpm add -D @eslint/js \
+  @types/node \
+  @typescript-eslint/eslint-plugin \
+  @typescript-eslint/parser \
+  eslint \
+  eslint-config-prettier \
+  eslint-plugin-prettier \
+  nodemon \
+  prettier \
+  ts-node \
+  tsx \
+  typescript > /dev/null 2>&1
 print_success "Development dependencies installed"
 
 print_step "Creating project structure"
@@ -103,6 +111,39 @@ cat > .eslintrc.json << EOL
   }
 }
 EOL
+cat > eslint.config.js << EOL
+import js from '@eslint/js';
+import typescript from '@typescript-eslint/eslint-plugin';
+import typescriptParser from '@typescript-eslint/parser';
+import prettier from 'eslint-plugin-prettier';
+import prettierConfig from 'eslint-config-prettier';
+
+export default [
+  js.configs.recommended,
+  {
+    files: ['src/**/*.{js,ts}'],
+    languageOptions: {
+      parser: typescriptParser,
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': typescript,
+      'prettier': prettier,
+    },
+    rules: {
+      ...typescript.configs.recommended.rules,
+      'prettier/prettier': 'error',
+      '@typescript-eslint/no-unused-vars': 'error',
+    },
+  },
+  prettierConfig,
+];
+EOL
 print_success "ESLint configured"
 
 print_step "Configuring Prettier"
@@ -121,7 +162,7 @@ print_step "Configuring package.json scripts"
 pnpm pkg set type="module"
 pnpm pkg set scripts.build="tsc"
 pnpm pkg set scripts.start="node dist/index.js"
-pnpm pkg set scripts.dev="nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts"
+pnpm pkg set scripts.dev="nodemon --watch 'src/**/*.ts' --exec 'tsx' src/index.ts"
 pnpm pkg set scripts.clean="rm -rf dist node_modules"
 pnpm pkg set scripts.lint="eslint 'src/**/*.{js,ts}'"
 pnpm pkg set scripts.format="prettier --write 'src/**/*.{js,ts}'"
@@ -131,25 +172,32 @@ print_step "Installing Skip Labs dependencies"
 pnpm add @skiplabs/skip > /dev/null 2>&1
 print_success "Skip Labs package installed"
 
-print_step "Installing Express and types"
-pnpm add express > /dev/null 2>&1
-pnpm add -D @types/express > /dev/null 2>&1
-print_success "Express installed"
+print_step "Installing Fastify and types"
+pnpm add fastify > /dev/null 2>&1
+pnpm add -D @types/fastify > /dev/null 2>&1
+print_success "Fastify installed"
 
 print_step "Creating initial source file"
 cat > src/index.ts << EOL
-import express from 'express';
+import Fastify from 'fastify';
 
-const app = express();
-const port = process.env.PORT || 3000;
+const fastify = Fastify({ logger: true });
+const port = Number(process.env.PORT) || 3000;
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Hello from TypeScript!' });
+fastify.get('/', async () => {
+  return { message: 'Hello from TypeScript!' };
 });
 
-app.listen(port, () => {
-  console.log(\`Server running at http://localhost:\${port}\`);
-});
+const start = async () => {
+  try {
+    await fastify.listen({ port, host: '0.0.0.0' });
+    console.log(\`Server running at http://localhost:\${port}\`);
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+};
+start();
 EOL
 print_success "Created initial source file"
 
