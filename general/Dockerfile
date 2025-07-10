@@ -15,8 +15,6 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     python3 \
     python3-pip \
-    nodejs \
-    npm \
     zsh \
     vim \
     nano \
@@ -32,7 +30,11 @@ RUN apt-get update && apt-get install -y \
     apt-transport-https \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 20.x using n (node version manager)
+# Install Node.js 20.x using NodeSource repository
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+# Install pnpm
 RUN npm install -g pnpm
 
 # Install Claude CLI
