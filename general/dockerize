@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# To use it from anywhere, add an alias to your shell config:
+#   echo 'alias dockerize="/your/path/to/dockerize"' >> ~/.zshrc
+
+# Default configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOCKERFILE_DIR="$SCRIPT_DIR"
+PORTS="3000:3000,8080:8080"
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --rebuild)
+            REBUILD=true
+            shift
+            ;;
+        --ports)
+            PORTS="$2"
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+# Build port arguments
+PORT_ARGS=""
+if [[ -n "$PORTS" ]]; then
+    IFS=',' read -ra PORT_ARRAY <<< "$PORTS"
+    for port in "${PORT_ARRAY[@]}"; do
+        PORT_ARGS="$PORT_ARGS -p $port"
+    done
+fi
+
+# Build the Docker image if it doesn't exist or if forced
+if [[ "$REBUILD" == "true" ]] || ! docker image inspect dev-env &> /dev/null; then
+    echo "Building Docker image..."
+    docker build -t dev-env "$DOCKERFILE_DIR"
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to build Docker image"
+        exit 1
+    fi
+fi
+
+# Run the container with current directory mounted
+echo "Starting Docker container with current directory mounted..."
+docker run -it --rm \
+    $PORT_ARGS \
+    -v "$(pwd):/home/dev/workspace" \
+    dev-env
