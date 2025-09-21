@@ -23,7 +23,6 @@ print_step "Setting up .gitignore"
 cat > .gitignore << EOL
 # Dependencies
 node_modules
-.pnpm-store
 
 # Build output
 dist
@@ -33,7 +32,7 @@ build
 logs
 *.log
 npm-debug.log*
-pnpm-debug.log*
+bun.lockb
 
 # Environment variables
 .env
@@ -58,22 +57,19 @@ Thumbs.db
 EOL
 print_success ".gitignore created"
 
-print_step "Initializing pnpm project"
-pnpm init > /dev/null 2>&1
+print_step "Initializing bun project"
+bun init -y > /dev/null 2>&1
 print_success "Project initialized"
 
 print_step "Installing development dependencies"
-pnpm add -D @eslint/js \
+bun add -D @eslint/js \
   @types/node \
   @typescript-eslint/eslint-plugin \
   @typescript-eslint/parser \
   eslint \
   eslint-config-prettier \
   eslint-plugin-prettier \
-  nodemon \
   prettier \
-  ts-node \
-  tsx \
   typescript > /dev/null 2>&1
 print_success "Development dependencies installed"
 
@@ -82,7 +78,7 @@ mkdir -p src
 print_success "Source directory created"
 
 print_step "Configuring TypeScript"
-npx tsc --init \
+bunx tsc --init \
   --target ES2022 \
   --module nodenext \
   --moduleResolution nodenext \
@@ -159,22 +155,31 @@ EOL
 print_success "Prettier configured"
 
 print_step "Configuring package.json scripts"
-pnpm pkg set type="module"
-pnpm pkg set scripts.build="tsc"
-pnpm pkg set scripts.start="node dist/index.js"
-pnpm pkg set scripts.dev="nodemon --watch 'src/**/*.ts' --exec 'tsx' src/index.ts"
-pnpm pkg set scripts.clean="rm -rf dist node_modules"
-pnpm pkg set scripts.lint="eslint 'src/**/*.{js,ts}'"
-pnpm pkg set scripts.format="prettier --write 'src/**/*.{js,ts}'"
+# Update package.json using jq or manual editing since bun doesn't have pkg set
+cat > package.json << EOL
+{
+  "name": "$(basename "$PWD")",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "start": "node dist/index.js",
+    "dev": "bun --watch src/index.ts",
+    "clean": "rm -rf dist node_modules bun.lockb",
+    "lint": "eslint 'src/**/*.{js,ts}'",
+    "format": "prettier --write 'src/**/*.{js,ts}'"
+  }
+}
+EOL
 print_success "Package.json configured"
 
 print_step "Installing Skip Labs dependencies"
-pnpm add @skiplabs/skip > /dev/null 2>&1
+bun add @skiplabs/skip > /dev/null 2>&1
 print_success "Skip Labs package installed"
 
 print_step "Installing Fastify and types"
-pnpm add fastify > /dev/null 2>&1
-pnpm add -D @types/fastify > /dev/null 2>&1
+bun add fastify > /dev/null 2>&1
+bun add -D @types/fastify > /dev/null 2>&1
 print_success "Fastify installed"
 
 print_step "Creating initial source file"
@@ -208,11 +213,11 @@ print_success "Initial commit created"
 
 echo -e "\n${GREEN}${BOLD}🚀 Project setup complete!${NC}"
 echo -e "${YELLOW}Available commands:${NC}"
-echo -e "  ${BOLD}pnpm dev${NC}      - Start development server with hot reload"
-echo -e "  ${BOLD}pnpm build${NC}    - Build the project"
-echo -e "  ${BOLD}pnpm start${NC}    - Start the production server"
-echo -e "  ${BOLD}pnpm lint${NC}     - Run ESLint"
-echo -e "  ${BOLD}pnpm format${NC}   - Format code with Prettier"
-echo -e "  ${BOLD}pnpm clean${NC}    - Clean build files and dependencies\n"
+echo -e "  ${BOLD}bun dev${NC}       - Start development server with hot reload"
+echo -e "  ${BOLD}bun build${NC}     - Build the project"
+echo -e "  ${BOLD}bun start${NC}     - Start the production server"
+echo -e "  ${BOLD}bun lint${NC}      - Run ESLint"
+echo -e "  ${BOLD}bun format${NC}    - Format code with Prettier"
+echo -e "  ${BOLD}bun clean${NC}     - Clean build files and dependencies\n"
 
 
